@@ -10,8 +10,10 @@
 </template>
 
 <script>
-// eslint-disable-next-line import/no-extraneous-dependencies
-const { ipcRenderer } = require('electron');
+// const electronStore = remote.getGlobal('electronStore');
+import ElectronStore from '@/electronStore/renderer';
+
+const electronStore = new ElectronStore();
 
 export default {
   name: 'app',
@@ -21,10 +23,13 @@ export default {
     };
   },
   created() {
-    ipcRenderer.on('token', (e, token) => {
-      console.log(e, token);
-      this.token = token;
-    });
+    // ipcRenderer.on('message', (e, token) => {
+    //   console.log('electron_store_message', e, token);
+    //   // this.token = token;
+    // });
+    electronStore.onReceiving('message', console.log);
+    console.log(electronStore.get('token'));
+    this.token = electronStore.get('token');
   },
 };
 </script>

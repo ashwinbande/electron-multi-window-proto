@@ -7,6 +7,10 @@ import {
   installVueDevtools,
 // eslint-disable-next-line import/no-extraneous-dependencies
 } from 'vue-cli-plugin-electron-builder/lib';
+import ElectronStore from '@/electronStore/main';
+
+// eslint-disable-next-line no-new
+const electronStore = new ElectronStore();
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -27,6 +31,7 @@ const loginWindowOptions = {
   show: false,
   webPreferences: {
     nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
+    enableRemoteModule: true,
   },
 };
 const mainWindowOptions = {
@@ -38,6 +43,7 @@ const mainWindowOptions = {
   show: false,
   webPreferences: {
     nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
+    enableRemoteModule: true,
   },
 };
 
@@ -137,6 +143,7 @@ app.on('ready', async () => {
   }
   // createWindow();
   loginWin = createWindow('login', 'login.html', loginWindowOptions);
+  electronStore.register('loginWin', loginWin);
 });
 
 // Exit cleanly on request from parent process in development mode.
@@ -154,11 +161,15 @@ if (isDevelopment) {
   }
 }
 
-ipcMain.on('start-main-window', (e, token) => {
-  mainWin = createWindow('main', 'main.html', mainWindowOptions);
-  mainWin.webContents.on('did-finish-load', () => {
-    loginWin.close();
-    mainWin.maximize();
-    mainWin.webContents.send('token', token);
-  });
+ipcMain.on('start-main-window', () => {
+  if (mainWin) mainWin.maximize();
+  else {
+    mainWin = createWindow('main', 'main.html', mainWindowOptions);
+    electronStore.register('mainWin', mainWin);
+
+    mainWin.webContents.on('did-finish-load', () => {
+      // loginWin.close();
+      mainWin.maximize();
+    });
+  }
 });
